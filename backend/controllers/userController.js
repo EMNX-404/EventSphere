@@ -12,7 +12,20 @@ const updateProfile = async (req, res) => {
     user.logoUrl = req.body.logoUrl || user.logoUrl;
 
     const updatedUser = await user.save();
-    res.json(updatedUser);
+    const { password, ...safeUser } = updatedUser.toObject();
+    res.json(safeUser);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get all approved exhibitors for the public directory
+// @route   GET /api/users/exhibitors
+// @access  Public
+const getExhibitors = async (req, res) => {
+  try {
+    const exhibitors = await User.find({ role: 'exhibitor', isApproved: true }).select('-password');
+    res.json(exhibitors);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -42,7 +55,23 @@ const approveExhibitor = async (req, res) => {
 
     exhibitor.isApproved = true;
     await exhibitor.save();
-    res.json({ message: 'Exhibitor approved', exhibitor });
+
+    const { password, ...safeExhibitor } = exhibitor.toObject();
+    res.json({ message: 'Exhibitor approved', exhibitor: safeExhibitor });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get logged-in attendee's bookmarked session IDs
+// @route   GET /api/users/bookmarks
+// @access  Attendee only
+const getBookmarks = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('bookmarks');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json(user.bookmarks || []);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -54,10 +83,13 @@ const approveExhibitor = async (req, res) => {
 const toggleBookmark = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     const { sessionId } = req.params;
+    user.bookmarks = user.bookmarks || [];
 
     if (user.bookmarks.includes(sessionId)) {
-      user.bookmarks = user.bookmarks.filter(id => id !== sessionId);
+      user.bookmarks = user.bookmarks.filter((id) => id !== sessionId);
     } else {
       user.bookmarks.push(sessionId);
     }
@@ -69,4 +101,11 @@ const toggleBookmark = async (req, res) => {
   }
 };
 
-module.exports = { updateProfile, getPendingExhibitors, approveExhibitor, toggleBookmark };
+module.exports = {
+  updateProfile,
+  getExhibitors,
+  getPendingExhibitors,
+  approveExhibitor,
+  getBookmarks,
+  toggleBookmark
+};
