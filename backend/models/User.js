@@ -31,6 +31,15 @@ const userSchema = new mongoose.Schema({
   },
   logoUrl: {
     type: String
+  },
+  isApproved: {
+    type: Boolean,
+    default: false
+  },
+  // Attendee saved session IDs
+  bookmarks: {
+    type: [String],
+    default: []
   }
 }, { timestamps: true }); // Automatically adds createdAt and updatedAt fields
 

@@ -11,6 +11,26 @@ const eventSchema = new mongoose.Schema({
   theme: {
     type: String
   },
+  eventType: {
+    type: String,
+    default: 'Expo'
+  },
+  imageUrl: {
+    type: String,
+    default: ''
+  },
+  attendees: {
+    type: Number,
+    default: 0
+  },
+  highlights: {
+    type: [String],
+    default: []
+  },
+  exhibitors: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   startDate: {
     type: Date,
     required: true
@@ -25,10 +45,9 @@ const eventSchema = new mongoose.Schema({
   },
   organizer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Links this event to a specific admin User
+    ref: 'User',
     required: true
   },
-  // Embedded schedule documents
   schedule: [{
     sessionTitle: String,
     speakerName: String,
